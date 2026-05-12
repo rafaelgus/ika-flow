@@ -1,6 +1,29 @@
 import { GoogleGenAI } from '@google/genai';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiClient: GoogleGenAI | null = null;
+
+function getAiClient(): GoogleGenAI {
+  if (aiClient) return aiClient;
+  
+  // Try environment first, then local storage
+  const apiKey = process.env.GEMINI_API_KEY || localStorage.getItem('gemini_api_key');
+  
+  if (!apiKey) {
+    throw new Error('API key is missing. Please provide a Gemini API Key.');
+  }
+  
+  aiClient = new GoogleGenAI({ apiKey });
+  return aiClient;
+}
+
+export function setApiKey(key: string) {
+  localStorage.setItem('gemini_api_key', key);
+  aiClient = null; // force re-init
+}
+
+export function hasApiKey(): boolean {
+  return !!(process.env.GEMINI_API_KEY || localStorage.getItem('gemini_api_key'));
+}
 
 const SYSTEM_PROMPT = `
 You are an expert at creating Mermaid.js diagrams.
@@ -13,6 +36,7 @@ Your response will be parsed directly by the Mermaid.js rendering engine.
 `;
 
 export async function generateMermaidCode(prompt: string, currentCode?: string): Promise<string> {
+  const ai = getAiClient();
   const finalPrompt = currentCode
     ? `Here is the current diagram code:\n${currentCode}\n\nPlease update it based on this request: ${prompt}`
     : `Please create a Mermaid diagram based on this request: ${prompt}`;

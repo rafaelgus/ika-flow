@@ -6,7 +6,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Play, Sparkles, AlertCircle, Settings2, Download, Image as ImageIcon, LayoutTemplate, Copy, Undo2, Redo2 } from 'lucide-react';
 import { MermaidChart, MermaidConfig } from './components/MermaidChart';
-import { generateMermaidCode } from './lib/gemini';
+import { generateMermaidCode, setApiKey, hasApiKey } from './lib/gemini';
 import { exportSvg, exportPng, copyImageToClipboard } from './lib/exportUtils';
 
 const DIAGRAM_TEMPLATES = {
@@ -142,6 +142,9 @@ const DIAGRAM_TEMPLATES = {
 const DEFAULT_CODE = DIAGRAM_TEMPLATES.flowchart.code;
 
 export default function App() {
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [hasKey, setHasKey] = useState(hasApiKey());
+
   const [history, setHistory] = useState<string[]>([DEFAULT_CODE]);
   const [historyIndex, setHistoryIndex] = useState(0);
   
@@ -404,6 +407,33 @@ export default function App() {
           </div>
 
           <section className="space-y-6">
+            {!hasKey && (
+              <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl space-y-3">
+                <label className="text-[10px] uppercase font-bold text-indigo-400 block">Gemini API Key</label>
+                <input 
+                  type="password"
+                  value={apiKeyInput}
+                  onChange={e => setApiKeyInput(e.target.value)}
+                  placeholder="AIzaSy..."
+                  className="w-full bg-[#1e2336] border border-[#343b58] text-sm text-slate-200 rounded-lg p-2 focus:outline-none focus:border-indigo-500"
+                />
+                <button
+                  onClick={() => {
+                    if (apiKeyInput.trim()) {
+                      setApiKey(apiKeyInput.trim());
+                      setHasKey(true);
+                      setApiKeyInput('');
+                      setError(''); // Clear any previous API key errors
+                    }
+                  }}
+                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-colors"
+                >
+                  Save Key
+                </button>
+                <p className="text-[10px] text-slate-400 leading-tight">Key is stored locally in your browser. Required for AI features.</p>
+              </div>
+            )}
+
             <div>
               <label className="text-[10px] uppercase font-bold text-slate-500 block mb-3">Color Palette</label>
               <div className="grid grid-cols-2 gap-2">
