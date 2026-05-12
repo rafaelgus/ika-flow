@@ -1,0 +1,6 @@
+{
+  "name": "IKA-flow",
+  "description": "An AI-powered application to generate and edit Mermaid diagrams using natural language.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
