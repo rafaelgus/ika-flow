@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Sparkles, AlertCircle, Settings2, Download, Image as ImageIcon, LayoutTemplate, Copy, Undo2, Redo2 } from 'lucide-react';
+import { Play, Sparkles, AlertCircle, Settings2, Download, Image as ImageIcon, LayoutTemplate, Copy, Undo2, Redo2, Loader2, Check } from 'lucide-react';
 import { MermaidChart, MermaidConfig } from './components/MermaidChart';
 import { generateMermaidCode, setApiKey, hasApiKey } from './lib/gemini';
 import { exportSvg, exportPng, copyImageToClipboard } from './lib/exportUtils';
@@ -400,11 +400,22 @@ export default function App() {
           {/* Code Editor Section */}
           <div className="flex flex-col flex-1 overflow-hidden p-4 bg-[#1e2336] relative">
             <div className="flex justify-between items-center mb-3">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2 h-6">
                 Raw Mermaid Code
-                {saveStatus === 'saving' && <span className="text-[10px] text-indigo-400 normal-case font-normal">(Saving...)</span>}
-                {saveStatus === 'saved' && <span className="text-[10px] text-emerald-400 normal-case font-normal">(Saved)</span>}
-                {saveStatus === 'error' && <span className="text-[10px] text-red-500 normal-case font-normal">(Save Error)</span>}
+                <div 
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold tracking-widest uppercase border transition-all duration-200 ${
+                    saveStatus === 'idle' ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'
+                  } ${
+                    saveStatus === 'saving' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                    saveStatus === 'saved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                    'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                  }`}
+                >
+                  {saveStatus === 'saving' && <Loader2 size={10} className="animate-spin" />}
+                  {saveStatus === 'saved' && <Check size={10} />}
+                  {saveStatus === 'error' && <AlertCircle size={10} />}
+                  <span>{saveStatus === 'saving' ? 'Saving' : saveStatus === 'saved' ? 'Saved' : 'Error'}</span>
+                </div>
               </label>
               <div className="flex gap-1">
                 <button 
