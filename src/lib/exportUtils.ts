@@ -10,10 +10,40 @@ export async function exportSvg(config: ExportConfig) {
   try {
     const el = document.getElementById('mermaid-export-container');
     if (!el) return;
-    const dataUrl = await toSvg(el, { 
-      backgroundColor: getBgColor(config.theme),
-      style: { transform: 'none', margin: '0' }
-    });
+    
+    const svgElement = el.querySelector('svg');
+    if (!svgElement) return;
+
+    // Clone the node to avoid mutating the live DOM
+    const clone = svgElement.cloneNode(true) as SVGSVGElement;
+    
+    // Ensure styles are embedded if needed, or simply export the pure SVG
+    // Add background rect if theme requires it
+    const bg = getBgColor(config.theme);
+    if (bg && bg !== 'transparent') {
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('width', '100%');
+        rect.setAttribute('height', '100%');
+        rect.setAttribute('fill', bg);
+        clone.insertBefore(rect, clone.firstChild);
+    }
+
+    const serializer = new XMLSerializer();
+    let source = serializer.serializeToString(clone);
+    
+    // Add name spaces
+    if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+        source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    if(!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)){
+        source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+    }
+
+    // Add xml declaration
+    source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+
+    // Convert string to data URI
+    const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(source);
     
     const link = document.createElement('a');
     link.href = dataUrl;

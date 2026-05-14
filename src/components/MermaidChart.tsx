@@ -106,11 +106,25 @@ export function MermaidChart({ chart, config, onErrorChange }: MermaidChartProps
           themeVariables: Object.keys(themeVars).length > 0 ? themeVars : undefined,
           securityLevel: 'loose',
           fontFamily: config.fontFamily,
+          flowchart: { htmlLabels: false },
         });
 
         const id = `mermaid-${Math.random().toString(36).substring(2, 9)}`;
         
-        const { svg: generatedSvg } = await mermaid.render(id, chart);
+        // Use a persistent measurement container in the body so Mermaid can read font metrics natively
+        let measureContainer = document.getElementById('mermaid-measure-container');
+        if (!measureContainer) {
+          measureContainer = document.createElement('div');
+          measureContainer.id = 'mermaid-measure-container';
+          measureContainer.style.position = 'absolute';
+          measureContainer.style.top = '-9999px';
+          measureContainer.style.left = '-9999px';
+          measureContainer.style.visibility = 'hidden';
+          document.body.appendChild(measureContainer);
+        }
+
+        const { svg: generatedSvg } = await mermaid.render(id, chart, measureContainer);
+        measureContainer.innerHTML = ''; // Clean up after render
         
         if (isMounted) {
           setSvg(generatedSvg);
