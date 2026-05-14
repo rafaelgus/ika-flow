@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Play, Sparkles, AlertCircle, Settings2, Download, Image as ImageIcon, LayoutTemplate, Copy, Undo2, Redo2 } from 'lucide-react';
 import { MermaidChart, MermaidConfig } from './components/MermaidChart';
 import { generateMermaidCode, setApiKey, hasApiKey } from './lib/gemini';
