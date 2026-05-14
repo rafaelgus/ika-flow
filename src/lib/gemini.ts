@@ -6,7 +6,7 @@ function getAiClient(): GoogleGenAI {
   if (aiClient) return aiClient;
   
   // Try environment first, then local storage
-  const apiKey = process.env.GEMINI_API_KEY || localStorage.getItem('gemini_api_key');
+  const apiKey = import.meta.env.GEMINI_API_KEY || localStorage.getItem('gemini_api_key');
   
   if (!apiKey) {
     throw new Error('API key is missing. Please provide a Gemini API Key.');
@@ -22,7 +22,7 @@ export function setApiKey(key: string) {
 }
 
 export function hasApiKey(): boolean {
-  return !!(process.env.GEMINI_API_KEY || localStorage.getItem('gemini_api_key'));
+  return !!(import.meta.env.GEMINI_API_KEY || localStorage.getItem('gemini_api_key'));
 }
 
 const SYSTEM_PROMPT = `
