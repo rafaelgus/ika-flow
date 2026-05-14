@@ -202,6 +202,7 @@ export default function App() {
     theme: 'dark',
     palette: 'default',
     fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+    fontColor: 'default',
     lineWidth: 1,
     borderWidth: 1,
   });
@@ -572,6 +573,34 @@ export default function App() {
                      style={{ fontFamily: f.value }}
                    >
                      {f.label}
+                   </button>
+                 ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] uppercase font-bold text-slate-500 block mb-3">Text Color</label>
+              <div className="flex gap-2 flex-wrap">
+                 {[
+                   { label: 'Theme Default', value: 'default', colorClass: 'bg-transparent border border-slate-500' },
+                   { label: 'White', value: '#ffffff', colorClass: 'bg-white' },
+                   { label: 'Black', value: '#000000', colorClass: 'bg-black' },
+                   { label: 'Slate', value: '#94a3b8', colorClass: 'bg-slate-400' },
+                   { label: 'Indigo', value: '#818cf8', colorClass: 'bg-indigo-400' },
+                   { label: 'Rose', value: '#fb7185', colorClass: 'bg-rose-400' },
+                   { label: 'Emerald', value: '#34d399', colorClass: 'bg-emerald-400' },
+                 ].map(c => (
+                   <button 
+                     key={c.value}
+                     onClick={() => setConfig(prev => ({ ...prev, fontColor: c.value }))}
+                     title={c.label}
+                     className={`w-8 h-8 rounded-full shadow-sm transition-all flex items-center justify-center ${c.colorClass} ${
+                       config.fontColor === c.value 
+                        ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-[#1e2336] scale-110' 
+                        : 'hover:scale-105'
+                     }`}
+                   >
+                     {c.value === 'default' && <span className="text-[10px] font-bold text-slate-400">T</span>}
                    </button>
                  ))}
               </div>

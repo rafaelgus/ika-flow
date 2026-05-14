@@ -7,6 +7,7 @@ export interface MermaidConfig {
   theme: 'default' | 'dark' | 'forest' | 'neutral';
   palette: 'default' | 'oceanic' | 'dusk' | 'rose' | 'emerald';
   fontFamily: string;
+  fontColor: string;
   lineWidth: number;
   borderWidth: number;
 }
@@ -18,11 +19,11 @@ const PALETTES: Record<string, any> = {
     primaryBorderColor: '#0369a1',
     lineColor: '#38bdf8',
     secondaryColor: '#0ea5e9',
-    tertiaryColor: '#e0f2fe',
+    tertiaryColor: '#075985',
     nodeBorder: '#0369a1',
     clusterBkg: '#082f49',
     clusterBorder: '#0369a1',
-    edgeLabelBackground: '#082f49',
+    edgeLabelBackground: 'transparent',
     background: '#0ea5e9'
   },
   dusk: {
@@ -31,11 +32,11 @@ const PALETTES: Record<string, any> = {
     primaryBorderColor: '#5b21b6',
     lineColor: '#a78bfa',
     secondaryColor: '#8b5cf6',
-    tertiaryColor: '#ede9fe',
+    tertiaryColor: '#4c1d95',
     nodeBorder: '#5b21b6',
     clusterBkg: '#2e1065',
     clusterBorder: '#5b21b6',
-    edgeLabelBackground: '#2e1065',
+    edgeLabelBackground: 'transparent',
     background: '#8b5cf6'
   },
   rose: {
@@ -44,11 +45,11 @@ const PALETTES: Record<string, any> = {
     primaryBorderColor: '#be123c',
     lineColor: '#fb7185',
     secondaryColor: '#f43f5e',
-    tertiaryColor: '#ffe4e6',
+    tertiaryColor: '#881337',
     nodeBorder: '#be123c',
     clusterBkg: '#4c0519',
     clusterBorder: '#be123c',
-    edgeLabelBackground: '#4c0519',
+    edgeLabelBackground: 'transparent',
     background: '#f43f5e'
   },
   emerald: {
@@ -57,11 +58,11 @@ const PALETTES: Record<string, any> = {
     primaryBorderColor: '#047857',
     lineColor: '#34d399',
     secondaryColor: '#10b981',
-    tertiaryColor: '#d1fae5',
+    tertiaryColor: '#064e3b',
     nodeBorder: '#047857',
     clusterBkg: '#022c22',
     clusterBorder: '#047857',
-    edgeLabelBackground: '#022c22',
+    edgeLabelBackground: 'transparent',
     background: '#10b981'
   }
 };
@@ -91,28 +92,25 @@ export function MermaidChart({ chart, config, onErrorChange }: MermaidChartProps
       }
 
       try {
+        let themeVars: any = config.palette !== 'default' ? { ...PALETTES[config.palette] } : {};
+        if (config.fontColor && config.fontColor !== 'default') {
+          themeVars.textColor = config.fontColor;
+          themeVars.nodeTextColor = config.fontColor;
+          themeVars.edgeLabelText = config.fontColor;
+          themeVars.pieTitleTextSize = undefined; 
+        }
+
         mermaid.initialize({
           startOnLoad: false,
           theme: config.theme,
-          themeVariables: config.palette !== 'default' ? PALETTES[config.palette] : undefined,
+          themeVariables: Object.keys(themeVars).length > 0 ? themeVars : undefined,
           securityLevel: 'loose',
-          fontFamily: config.fontFamily
+          fontFamily: config.fontFamily,
         });
 
         const id = `mermaid-${Math.random().toString(36).substring(2, 9)}`;
         
-        let measureContainer = document.getElementById('mermaid-measure-container');
-        if (!measureContainer) {
-          measureContainer = document.createElement('div');
-          measureContainer.id = 'mermaid-measure-container';
-          measureContainer.style.position = 'absolute';
-          measureContainer.style.top = '-9999px';
-          measureContainer.style.left = '-9999px';
-          document.body.appendChild(measureContainer);
-        }
-
-        const { svg: generatedSvg } = await mermaid.render(id, chart, measureContainer);
-        measureContainer.innerHTML = ''; // Clean up after render
+        const { svg: generatedSvg } = await mermaid.render(id, chart);
         
         if (isMounted) {
           setSvg(generatedSvg);
@@ -177,6 +175,14 @@ export function MermaidChart({ chart, config, onErrorChange }: MermaidChartProps
   return (
     <>
       <style>{`
+        ${config.fontColor && config.fontColor !== 'default' ? `
+        .mermaid-wrapper .nodeLabel, 
+        .mermaid-wrapper .edgeLabel,
+        .mermaid-wrapper text {
+            color: ${config.fontColor} !important;
+            fill: ${config.fontColor} !important;
+        }
+        ` : ''}
         .mermaid-wrapper .edgePath .path,
         .mermaid-wrapper .flowchart-link,
         .mermaid-wrapper .messageLine0,
@@ -212,7 +218,7 @@ export function MermaidChart({ chart, config, onErrorChange }: MermaidChartProps
         >
           {({ zoomIn, zoomOut, resetTransform }) => (
             <>
-              <div className="absolute bottom-6 right-6 flex items-center gap-1 z-50 bg-[#1e2336]/90 p-1.5 rounded-lg border border-[#343b58] backdrop-blur-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute bottom-6 right-6 flex items-center gap-1 z-50 bg-[#1e2336]/90 p-1.5 rounded-lg border border-[#343b58] backdrop-blur-md shadow-lg">
                 <button 
                   onClick={() => zoomIn(0.2)} 
                   className="p-1.5 rounded-md hover:bg-white/10 text-slate-300 transition-colors"
