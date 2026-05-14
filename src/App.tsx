@@ -145,10 +145,54 @@ export default function App() {
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [hasKey, setHasKey] = useState(hasApiKey());
 
-  const [history, setHistory] = useState<string[]>([DEFAULT_CODE]);
+  const [code, setCode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mermaid_code');
+      return saved || DEFAULT_CODE;
+    } catch (e) {
+      return DEFAULT_CODE;
+    }
+  });
+
+  const [history, setHistory] = useState<string[]>(() => [code]);
   const [historyIndex, setHistoryIndex] = useState(0);
   
-  const [code, setCode] = useState(DEFAULT_CODE);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  const [syntaxError, setSyntaxError] = useState<string | null>(null);
+  const [errorLine, setErrorLine] = useState<number | null>(null);
+
+  const backdropRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    if (backdropRef.current) {
+      backdropRef.current.scrollTop = e.currentTarget.scrollTop;
+      backdropRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
+
+  useEffect(() => {
+    setSaveStatus('saving');
+    let resetTimer: NodeJS.Timeout;
+    
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem('mermaid_code', code);
+        setSaveStatus('saved');
+        resetTimer = setTimeout(() => setSaveStatus('idle'), 2000);
+      } catch (err) {
+        console.error("Failed to save to localStorage", err);
+        setSaveStatus('error');
+      }
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer);
+      if (resetTimer) clearTimeout(resetTimer);
+    };
+  }, [code]);
+
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
@@ -353,10 +397,13 @@ export default function App() {
           </div>
 
           {/* Code Editor Section */}
-          <div className="flex flex-col flex-1 overflow-hidden p-4 bg-[#1e2336]">
+          <div className="flex flex-col flex-1 overflow-hidden p-4 bg-[#1e2336] relative">
             <div className="flex justify-between items-center mb-3">
-              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                 Raw Mermaid Code
+                {saveStatus === 'saving' && <span className="text-[10px] text-indigo-400 normal-case font-normal">(Saving...)</span>}
+                {saveStatus === 'saved' && <span className="text-[10px] text-emerald-400 normal-case font-normal">(Saved)</span>}
+                {saveStatus === 'error' && <span className="text-[10px] text-red-500 normal-case font-normal">(Save Error)</span>}
               </label>
               <div className="flex gap-1">
                 <button 
@@ -375,12 +422,39 @@ export default function App() {
                 </button>
               </div>
             </div>
-            <textarea
-              className="flex-1 w-full resize-none rounded-xl border border-[#343b58] bg-[#0f172a] p-4 font-mono text-xs text-indigo-200 shadow-inner focus:border-indigo-500 focus:outline-none leading-relaxed"
-              value={code}
-              onChange={handleCodeChange}
-              spellCheck={false}
-            />
+            
+            <div className="relative flex-1 w-full rounded-xl border border-[#343b58] bg-[#0f172a] shadow-inner focus-within:border-indigo-500 transition-colors overflow-hidden group">
+              <div 
+                ref={backdropRef}
+                className="absolute inset-0 p-4 font-mono text-xs leading-relaxed whitespace-pre pointer-events-none overflow-hidden"
+                aria-hidden="true"
+              >
+                {code.split('\n').map((line, i) => {
+                   const isErrorLine = syntaxError && errorLine === i + 1;
+                   return (
+                     <div key={i} className={`${isErrorLine ? 'bg-red-500/30 ring-1 ring-red-500/50 rounded-sm' : ''} text-transparent w-max min-w-full h-[1.625em]`}>
+                       <span className="opacity-0">{line || ' '}</span>
+                     </div>
+                   );
+                })}
+              </div>
+              <textarea
+                ref={textareaRef}
+                className="absolute inset-0 w-full h-full resize-none p-4 font-mono text-xs text-indigo-200 outline-none leading-relaxed whitespace-pre bg-transparent"
+                style={{ caretColor: 'white' }}
+                value={code}
+                onChange={handleCodeChange}
+                onScroll={handleScroll}
+                spellCheck={false}
+              />
+            </div>
+
+            {syntaxError && (
+              <div className="mt-3 bg-red-950/40 border border-red-500/30 rounded-lg p-3 text-xs text-red-300 max-h-32 overflow-y-auto shrink-0 shadow-lg">
+                 <p className="font-semibold text-red-400 mb-1 flex items-center gap-1.5"><AlertCircle size={14} /> Syntax Error</p>
+                 <pre className="whitespace-pre-wrap font-mono text-[10px] leading-relaxed">{syntaxError}</pre>
+              </div>
+            )}
           </div>
         </aside>
 
@@ -395,7 +469,14 @@ export default function App() {
           </div>
 
           <div className="absolute inset-0 p-12">
-            <MermaidChart chart={code} config={config} />
+            <MermaidChart 
+               chart={code} 
+               config={config} 
+               onErrorChange={(err, line) => {
+                 setSyntaxError(err);
+                 setErrorLine(line);
+               }} 
+            />
           </div>
         </section>
 

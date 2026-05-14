@@ -69,9 +69,10 @@ const PALETTES: Record<string, any> = {
 interface MermaidChartProps {
   chart: string;
   config: MermaidConfig;
+  onErrorChange?: (error: string | null, line: number | null) => void;
 }
 
-export function MermaidChart({ chart, config }: MermaidChartProps) {
+export function MermaidChart({ chart, config, onErrorChange }: MermaidChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string>('');
@@ -84,6 +85,7 @@ export function MermaidChart({ chart, config }: MermaidChartProps) {
         if (isMounted) {
           setSvg('');
           setError('');
+          if (onErrorChange) onErrorChange(null, null);
         }
         return;
       }
@@ -115,12 +117,32 @@ export function MermaidChart({ chart, config }: MermaidChartProps) {
         if (isMounted) {
           setSvg(generatedSvg);
           setError('');
+          if (onErrorChange) onErrorChange(null, null);
         }
       } catch (err: any) {
         if (isMounted) {
           // Mermaid often throws errors with a lot of HTML/CSS info.
           // Let's grab the actual message if possible.
-          setError(err?.message || 'Syntax Error in Mermaid diagram');
+          let errorMsg = err?.message || err?.str || 'Syntax Error in Mermaid diagram';
+          
+          let lineMatch = null;
+          if (err?.hash?.loc?.first_line) {
+             lineMatch = err.hash.loc.first_line;
+          } else {
+             const regex = /Parse error on line (\d+)/i;
+             const match = errorMsg.match(regex);
+             if (match) {
+                 lineMatch = parseInt(match[1], 10);
+             }
+          }
+          
+          // Remove overly huge SVGs or HTML chunks some mermaid versions embed in error
+          if (errorMsg.includes('<svg') && errorMsg.includes('</svg>')) {
+             errorMsg = errorMsg.replace(/<svg[\s\S]*?<\/svg>/gi, '[Visual Error Rendered]');
+          }
+          
+          setError(errorMsg);
+          if (onErrorChange) onErrorChange(errorMsg, lineMatch);
           console.error('Mermaid render error:', err);
         }
       }
@@ -131,7 +153,7 @@ export function MermaidChart({ chart, config }: MermaidChartProps) {
     return () => {
       isMounted = false;
     };
-  }, [chart, config]);
+  }, [chart, config, onErrorChange]);
 
   if (error) {
     return (
