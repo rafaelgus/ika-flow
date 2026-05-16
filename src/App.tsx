@@ -471,7 +471,13 @@ export default function App() {
         </aside>
 
         {/* Right Canvas */}
-        <section className="flex-1 overflow-auto relative bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] bg-fixed flex flex-col">
+        <section 
+           className={`flex-1 overflow-auto relative bg-fixed flex flex-col transition-colors ${
+             config.theme === 'dark' || config.theme === 'forest' || config.theme === 'oceanic' || config.theme === 'dusk' || config.theme === 'rose' || config.theme === 'emerald'
+             ? "bg-[#1e293b] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"
+             : "bg-[#f8fafc] bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"
+           }`}
+        >
           
           <div className="absolute top-4 right-4 z-20 flex gap-2">
             <div className="bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs px-3 py-1.5 rounded-lg flex items-center gap-2 shadow-lg backdrop-blur-md">

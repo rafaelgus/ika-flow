@@ -97,7 +97,14 @@ export function MermaidChart({ chart, config, onErrorChange }: MermaidChartProps
           themeVars.textColor = config.fontColor;
           themeVars.nodeTextColor = config.fontColor;
           themeVars.edgeLabelText = config.fontColor;
+          themeVars.actorTextColor = config.fontColor;
+          themeVars.noteTextColor = config.fontColor;
+          themeVars.taskTextColor = config.fontColor;
+          themeVars.stateLabelColor = config.fontColor;
           themeVars.pieTitleTextSize = undefined; 
+          themeVars.labelTextColor = config.fontColor;
+          themeVars.classText = config.fontColor;
+          themeVars.titleColor = config.fontColor;
         }
 
         mermaid.initialize({
@@ -106,7 +113,7 @@ export function MermaidChart({ chart, config, onErrorChange }: MermaidChartProps
           themeVariables: Object.keys(themeVars).length > 0 ? themeVars : undefined,
           securityLevel: 'loose',
           fontFamily: config.fontFamily,
-          flowchart: { htmlLabels: false },
+          flowchart: { htmlLabels: true },
         });
 
         const id = `mermaid-${Math.random().toString(36).substring(2, 9)}`;
@@ -125,9 +132,58 @@ export function MermaidChart({ chart, config, onErrorChange }: MermaidChartProps
 
         const { svg: generatedSvg } = await mermaid.render(id, chart, measureContainer);
         measureContainer.innerHTML = ''; // Clean up after render
+
+        const injectedStyles = `
+          <style>
+            ${config.fontColor && config.fontColor !== 'default' ? `
+            svg[id^="mermaid-"] .nodeLabel, 
+            svg[id^="mermaid-"] .edgeLabel,
+            svg[id^="mermaid-"] .node .label,
+            svg[id^="mermaid-"] text,
+            svg[id^="mermaid-"] span {
+                color: ${config.fontColor} !important;
+                fill: ${config.fontColor} !important;
+            }
+            ` : ''}
+
+            svg[id^="mermaid-"] .edgePath .path,
+            svg[id^="mermaid-"] .flowchart-link,
+            svg[id^="mermaid-"] .messageLine0,
+            svg[id^="mermaid-"] .messageLine1,
+            svg[id^="mermaid-"] .actor-line,
+            svg[id^="mermaid-"] path.transition,
+            svg[id^="mermaid-"] path.relation {
+                stroke-width: ${config.lineWidth}px !important;
+            }
+            
+            svg[id^="mermaid-"] .node rect,
+            svg[id^="mermaid-"] .node circle,
+            svg[id^="mermaid-"] .node ellipse,
+            svg[id^="mermaid-"] .node polygon,
+            svg[id^="mermaid-"] .node path,
+            svg[id^="mermaid-"] .label-container,
+            svg[id^="mermaid-"] .actor,
+            svg[id^="mermaid-"] .note,
+            svg[id^="mermaid-"] .pieCircle {
+                stroke-width: ${config.borderWidth}px !important;
+            }
+
+            svg[id^="mermaid-"] .cluster rect,
+            svg[id^="mermaid-"] .cluster polygon,
+            svg[id^="mermaid-"] .cluster path,
+            svg[id^="mermaid-"] .cluster .label-container {
+                fill: none !important;
+                stroke: none !important;
+                stroke-width: 0 !important;
+                opacity: 0 !important;
+            }
+          </style>
+        `;
         
+        const styledSvg = generatedSvg.replace(/<svg([^>]*)>/i, `<svg$1>\n${injectedStyles}\n`);
+
         if (isMounted) {
-          setSvg(generatedSvg);
+          setSvg(styledSvg);
           setError('');
           if (onErrorChange) onErrorChange(null, null);
         }
@@ -188,38 +244,6 @@ export function MermaidChart({ chart, config, onErrorChange }: MermaidChartProps
 
   return (
     <>
-      <style>{`
-        ${config.fontColor && config.fontColor !== 'default' ? `
-        .mermaid-wrapper .nodeLabel, 
-        .mermaid-wrapper .edgeLabel,
-        .mermaid-wrapper text {
-            color: ${config.fontColor} !important;
-            fill: ${config.fontColor} !important;
-        }
-        ` : ''}
-        .mermaid-wrapper .edgePath .path,
-        .mermaid-wrapper .flowchart-link,
-        .mermaid-wrapper .messageLine0,
-        .mermaid-wrapper .messageLine1,
-        .mermaid-wrapper .actor-line,
-        .mermaid-wrapper path.transition,
-        .mermaid-wrapper path.relation {
-            stroke-width: ${config.lineWidth}px !important;
-        }
-        
-        .mermaid-wrapper .node rect,
-        .mermaid-wrapper .node circle,
-        .mermaid-wrapper .node ellipse,
-        .mermaid-wrapper .node polygon,
-        .mermaid-wrapper .node path,
-        .mermaid-wrapper .actor,
-        .mermaid-wrapper .note,
-        .mermaid-wrapper .cluster rect,
-        .mermaid-wrapper .pieCircle,
-        .mermaid-wrapper .classGroup rect {
-            stroke-width: ${config.borderWidth}px !important;
-        }
-      `}</style>
       <div className="w-full h-full cursor-move overflow-hidden relative group">
         <TransformWrapper
           initialScale={1}
