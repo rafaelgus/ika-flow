@@ -8,6 +8,7 @@ export interface MermaidConfig {
   palette: 'default' | 'oceanic' | 'dusk' | 'rose' | 'emerald';
   fontFamily: string;
   fontColor: string;
+  nodeBackground: string;
   lineWidth: number;
   borderWidth: number;
 }
@@ -107,6 +108,19 @@ export function MermaidChart({ chart, config, onErrorChange }: MermaidChartProps
           themeVars.titleColor = config.fontColor;
         }
 
+        if (config.nodeBackground && config.nodeBackground !== 'default') {
+          const bg = config.nodeBackground === 'transparent' ? 'transparent' : config.nodeBackground;
+          themeVars.primaryColor = bg;
+          themeVars.nodeBkg = bg;
+          themeVars.mainBkg = bg;
+          themeVars.actorBkg = bg;
+          themeVars.taskBkg = bg;
+          themeVars.noteBkg = bg;
+          themeVars.stateBkg = bg;
+          themeVars.classBkg = bg;
+          themeVars.pie1 = bg;
+        }
+
         mermaid.initialize({
           startOnLoad: false,
           theme: config.theme,
@@ -143,6 +157,30 @@ export function MermaidChart({ chart, config, onErrorChange }: MermaidChartProps
             svg[id^="mermaid-"] span {
                 color: ${config.fontColor} !important;
                 fill: ${config.fontColor} !important;
+            }
+            ` : ''}
+
+            ${config.nodeBackground && config.nodeBackground !== 'default' ? `
+            svg[id^="mermaid-"] .node rect,
+            svg[id^="mermaid-"] .node circle,
+            svg[id^="mermaid-"] .node ellipse,
+            svg[id^="mermaid-"] .node polygon,
+            svg[id^="mermaid-"] .node path,
+            svg[id^="mermaid-"] .label-container,
+            svg[id^="mermaid-"] rect.basic,
+            svg[id^="mermaid-"] rect.actor,
+            svg[id^="mermaid-"] rect.note,
+            svg[id^="mermaid-"] rect.task,
+            svg[id^="mermaid-"] .pieCircle,
+            svg[id^="mermaid-"] .mindmap-node rect,
+            svg[id^="mermaid-"] .mindmap-node path,
+            svg[id^="mermaid-"] .mindmap-node circle,
+            svg[id^="mermaid-"] .mindmap-node polygon,
+            svg[id^="mermaid-"] .state-bkg,
+            svg[id^="mermaid-"] rect.state,
+            svg[id^="mermaid-"] .classGroup rect {
+                fill: ${config.nodeBackground} !important;
+                background-color: ${config.nodeBackground} !important;
             }
             ` : ''}
 

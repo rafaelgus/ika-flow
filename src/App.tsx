@@ -624,6 +624,35 @@ export default function App() {
             </div>
 
             <div>
+              <label className="text-[10px] uppercase font-bold text-slate-500 block mb-3">Node Background</label>
+              <div className="flex gap-2 flex-wrap">
+                 {[
+                   { label: 'Theme Default', value: 'default', colorClass: 'bg-transparent border border-slate-500' },
+                   { label: 'Transparent', value: 'transparent', colorClass: 'bg-[url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjMWUxZTFlIi8+CjxyZWN0IHg9IjQiIHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiMzMzMiLz4KPHJlY3QgeT0iNCIgd2lkdGg9IjQiIGhlaWdodD0iNCIgZmlsbD0iIzMzMyIvPgo8cmVjdCB4PSI0IiB5PSI0IiB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjMWUxZTFlIi8+Cjwvc3ZnPg==")]' },
+                   { label: 'White', value: '#ffffff', colorClass: 'bg-white' },
+                   { label: 'Black', value: '#000000', colorClass: 'bg-black' },
+                   { label: 'Slate', value: '#1e293b', colorClass: 'bg-slate-800' },
+                   { label: 'Indigo', value: '#4f46e5', colorClass: 'bg-indigo-600' },
+                   { label: 'Rose', value: '#e11d48', colorClass: 'bg-rose-600' },
+                   { label: 'Emerald', value: '#059669', colorClass: 'bg-emerald-600' },
+                 ].map(c => (
+                   <button 
+                     key={c.value}
+                     onClick={() => setConfig(prev => ({ ...prev, nodeBackground: c.value }))}
+                     title={c.label}
+                     className={`w-8 h-8 rounded-full shadow-sm transition-all flex items-center justify-center ${c.colorClass} ${
+                       config.nodeBackground === c.value 
+                        ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-[#1e2336] scale-110' 
+                        : 'hover:scale-105'
+                     }`}
+                   >
+                     {c.value === 'default' && <span className="text-[10px] font-bold text-slate-400">Bg</span>}
+                   </button>
+                 ))}
+              </div>
+            </div>
+
+            <div>
               <label className="text-[10px] uppercase font-bold text-slate-500 flex justify-between mb-3">
                 <span>Line Thickness</span>
                 <span className="text-indigo-400">{config.lineWidth}px</span>
